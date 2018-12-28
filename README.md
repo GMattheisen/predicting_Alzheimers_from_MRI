@@ -1,2 +1,30 @@
-# MRI_Alzheimers_Prediction
-Predicting Alzheimer's disease from MRI images and demographic information
+Predicting Alzheimer's Disease from MRI Images, Derived Anatomical Values, and Demographic Data
+======
+
+**Alzheimer's disease** is the most common form of dementia, effecting almost 12% of americans over the age of 60 and over 50 million people worldwide. Alzheimer's is best characterized by memory problems, movement difficulties, anosmia, and imparited reasoning.
+
+A Need for Better Diagnostics
+======
+Currently Alzheimer's disease is diagnosed through a physician by a combination of reported behavioral changes, patient history, and a mental status exam. As behavioral symptoms can overlap heavily with other neurodegenerative disorders, such as vascular dementia, this leaves ample room for misdiagnosis. Currently, Alzheimer's disease can only *definitively* diagnosed postmortum. This is because the hallmarks of Alzheimer's, proteinaceous changes that include amyloid plaques and neurofibrillarly tangles, can only be oberved in brain tissue itself following a postmortum autopsy. 
+
+The trammels of diagnosis are a major barrier to the development of Alzheimer's therapies. Assessing the efficacy of a drug in clinical trials is hindered with a potentially heterogenous patient population. Developing more accurate means of identifying the disease in living patients will facilitate medical advances in the field. 
+
+
+Identifying Neurodegeneration with a Neural Network
+======
+In this project, I trained neural networks and random forest classifiers to distinguish the brains of cognitively normal patients from those diagnosed with Alzheimer's disease. 
+
+**predicting_Alzheimers_from_MRI.py**
+I applied PCA to masked transverse-orientation MRI images from the Oasis 2 dataset in order to build a neural network that could discriminate healthy brains from brains of patients diagnosed with Alzheimer's disease with **94%** accuracy. This out-performed the predictive accuracy of a random forest classifier analysis of the derived anatomical measures and demographic data from the same patients by **10%**. 
+
+Data show the power of neural networks for image recognition and the immense potential of these machine learning methods for neurodegeneration diagnosis. 
+
+Predicting Alzheimer's in Cognitively Normal Subjects
+======
+
+Studies show that Alzheimer's associated neurodegeneration can occur almost a decade befor cognitive symptoms. During this preclinical stage, patient's have normal cognitive function, but amyloid plaque deposits are already accumulating in brain tissue, leading to neuronal death. While early degeneration begins in the hippocampus, the area of the brain associated with memory formation, in late-stage Alzheimer's disease, degeneration is widespread.
+
+**predicting_Alzheimers_from_derived_anatomical_values.py**
+The Oasis 3 dataset includes extensive demographic data and derived anatomical measures from healthy patients and those with Alzheimer's disease. I used a random forest classifier to distinguish the two groups with **88%** accuracy. The dataset contained 145 patients who were classified as having Alzheimer's disease *during* the study. Derived anatomical measures before and after the Alzheimer's diagnosis were included for these subjects. I asked if the random forest classifier could predict the development of Alzheimer's disease in these patients before their clinical diagnosis. The random forest classifier was trained on data from patients whose diagnosis was not changed during the study, as well as only the data from the patients whose diagnosis did change, after the diagnosis of Alzheimer's disease was made. I then fed back the data from these 145 patients before they diagnosised as having Alzheimer's disease back into the model. The model assigned the diagnosis of Alzheimer's disease in **97%** of cases. This shows that in patients described as cognitively normal by a physician, the random forest classifier ascribed the brain state as diseased. 
+
+When therapies for Alzheimer's disease are developed, early diagnosis will be pivotal to securing the best patient outcomes. 
