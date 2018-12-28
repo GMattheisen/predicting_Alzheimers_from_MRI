@@ -1,4 +1,4 @@
-Predicting Alzheimer's Disease from MRI Images, Derived Anatomical Values, and Demographic Data
+Diagnosing Alzheimer's Disease
 ======
 
 **Alzheimer's disease** is the most common form of dementia, effecting almost 12% of americans over the age of 60 and over 50 million people worldwide. Alzheimer's is best characterized by memory problems, movement difficulties, anosmia, and imparited reasoning.
@@ -28,3 +28,5 @@ Studies show that Alzheimer's associated neurodegeneration can occur almost a de
 The Oasis 3 dataset includes extensive demographic data and derived anatomical measures from healthy patients and those with Alzheimer's disease. I used a random forest classifier to distinguish the two groups with **88%** accuracy. The dataset contained 145 patients who were classified as having Alzheimer's disease *during* the study. Derived anatomical measures before and after the Alzheimer's diagnosis were included for these subjects. I asked if the random forest classifier could predict the development of Alzheimer's disease in these patients before their clinical diagnosis. The random forest classifier was trained on data from patients whose diagnosis was not changed during the study, as well as only the data from the patients whose diagnosis did change, after the diagnosis of Alzheimer's disease was made. I then fed back the data from these 145 patients before they diagnosised as having Alzheimer's disease back into the model. The model assigned the diagnosis of Alzheimer's disease in **97%** of cases. This shows that in patients described as cognitively normal by a physician, the random forest classifier ascribed the brain state as diseased. 
 
 When therapies for Alzheimer's disease are developed, early diagnosis will be pivotal to securing the best patient outcomes. 
+
+*Information supplied from the [NIH](https://www.nia.nih.gov/health/alzheimers-disease-fact-sheet)*
