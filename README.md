@@ -12,14 +12,24 @@ Currently Alzheimer's disease is diagnosed through a physician by a combination 
 The trammels of diagnosis are a major barrier to the development of Alzheimer's therapies. Assessing the efficacy of a drug in clinical trials is hindered with a potentially heterogenous patient population. Developing more accurate means of identifying the disease in living patients will facilitate medical advances in the field. 
 
 <p align="center"> 
-
+  
+Brain from Cognitively Normal Patient<br>
+![COGNORM](https://github.com/GMattheisen/predicting_Alzheimers_from_MRI/blob/master/brain_COG_NORM.jpg "MRI of Cognitively Normal Patient")
+  
 Brain showing Alzheimer's Degeneration<br>
 ![COGNORM](https://github.com/GMattheisen/predicting_Alzheimers_from_MRI/blob/master/brain_ALZ.jpg "MRI of AD patient")
 
-Brain from Cognitively Normal Patient<br>
-![COGNORM](https://github.com/GMattheisen/predicting_Alzheimers_from_MRI/blob/master/brain_COG_NORM.jpg "MRI of Cognitively Normal Patient")
 </p>
 
+
+<p align="center">
+  <b>Some Links:</b><br>
+  <a href="#">Link 1</a> |
+  <a href="#">Link 2</a> |
+  <a href="#">Link 3</a>
+  <br><br>
+  <img src="https://github.com/GMattheisen/predicting_Alzheimers_from_MRI/blob/master/brain_ALZ.jpg">
+</p>
 
 # The Oasis Brains Datasets
 
