@@ -28,11 +28,9 @@ Data used in this report are taken from the [OASIS Brains Datasets](https://www.
 
 Further information on data import and wrangling can be found in the individual project files.
 
-# Identifying Neurodegeneration with a Neural Network
+# [Identifying Neurodegeneration with a Neural Network](https://github.com/GMattheisen/predicting_Alzheimers_from_MRI/blob/master/predicting_Alzheimers_from_MRI.py)
 
 In this project, I trained neural networks and random forest classifiers to distinguish the brains of cognitively normal patients from those diagnosed with Alzheimer's disease. 
-
-**predicting_Alzheimers_from_MRI.py**
 
 I applied PCA to masked transverse-orientation MRI images from the Oasis 2 dataset in order to build a neural network that could discriminate healthy brains from brains of patients diagnosed with Alzheimer's disease with **94.6%** accuracy. This out-performed the predictive accuracy of a random forest classifier analysis of the derived anatomical measures and demographic data from the same patients by **~8%**. 
 
