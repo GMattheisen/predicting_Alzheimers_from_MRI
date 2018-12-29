@@ -1,6 +1,7 @@
-[Diagnosing Alzheimer's Disease](#diagnosing-alzheimers-disease)<br>
-[Identifying Neurodegeneration with a Neural Network](#identifying-neurodegeneration-with-a-neural-network)<br>
-[Predicting Alzheimer's in Cognitively Normal Subjects](#predicting-alzheimers-in-cognitively-normal-subjects)
+* [Diagnosing Alzheimer's Disease](#diagnosing-alzheimers-disease)<br>
+* [The Oasis Brains Datasets](#the-oasis-brains-datasets)<br>
+* [Identifying Neurodegeneration with a Neural Network](#identifying-neurodegeneration-with-a-neural-network)<br>
+* [Predicting Alzheimer's in Cognitively Normal Subjects](#predicting-alzheimers-in-cognitively-normal-subjects)
 
 # Diagnosing Alzheimer's Disease
 
@@ -10,6 +11,15 @@ Currently Alzheimer's disease is diagnosed through a physician by a combination 
 
 The trammels of diagnosis are a major barrier to the development of Alzheimer's therapies. Assessing the efficacy of a drug in clinical trials is hindered with a potentially heterogenous patient population. Developing more accurate means of identifying the disease in living patients will facilitate medical advances in the field. 
 
+# The Oasis Brains Datasets
+
+Data used in this report are taken from the [OASIS Brains Datasets](https://www.oasis-brains.org/#data). 
+
+**OASIS-1 Summary**: This set consists of a cross-sectional collection of 416 subjects aged 18 to 96. For each subject, 3 or 4 individual T1-weighted MRI scans obtained in single scan sessions are included. The subjects are all right-handed and include both men and women. 100 of the included subjects over the age of 60 have been clinically diagnosed with very mild to moderate Alzheimer’s disease (AD). 
+
+**OASIS-3 Summary**: This set is a retrospective compilation of data for >1000 participants that were collected across several ongoing projects through the WUSTL Knight ADRC over the course of 30 years. Participants include 609 cognitively normal adults and 489 individuals at various stages of cognitive decline ranging in age from 42-95yrs. All participants were assigned a new random identifier and all dates were removed and normalized to reflect days from entry into study. The dataset contains over 2000 MR sessions which include T1w, T2w, FLAIR, ASL, SWI, time of flight, resting-state BOLD, and DTI sequences. Many of the MR sessions are accompanied by volumetric segmentation files produced through Freesurfer processing. PET imaging from 3 different tracers, PIB, AV45, and FDG, totaling over 1500 raw imaging scans and the accompanying post-processed files from the Pet Unified Pipeline (PUP) are also available in OASIS-3. 
+
+Further information on data import and wrangling can be found in the individual project files.
 
 # Identifying Neurodegeneration with a Neural Network
 
