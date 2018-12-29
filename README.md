@@ -18,6 +18,12 @@ The trammels of diagnosis are a major barrier to the development of Alzheimer's 
   <img src="https://github.com/GMattheisen/predicting_Alzheimers_from_MRI/blob/master/brain_ALZ.jpg">
 </p>
 
+```
+function test() {
+  console.log("notice the blank line before this function?");
+}
+```
+
 # The Oasis Brains Datasets
 
 Data used in this report are taken from the [OASIS Brains Datasets](https://www.oasis-brains.org/#data). 
