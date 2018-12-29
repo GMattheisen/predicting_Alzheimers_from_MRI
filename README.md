@@ -1,5 +1,5 @@
-[Diagnosing Alzheimer's Disease](#diagnosing-alzheimers-disease)
-[Identifying Neurodegeneration with a Neural Network](#identifying-neurodegeneratoin-with-a-neural-network)
+[Diagnosing Alzheimer's Disease](#diagnosing-alzheimers-disease)<br>
+[Identifying Neurodegeneration with a Neural Network](#identifying-neurodegeneration-with-a-neural-network)<br>
 [Predicting Alzheimer's in Cognitively Normal Subjects](#predicting-alzheimers-in-cognitively-normal-subjects)
 
 # Diagnosing Alzheimer's Disease
