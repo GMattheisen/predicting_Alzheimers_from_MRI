@@ -1,9 +1,8 @@
-[click on this link](#diagnosing-alzheimers-disease)
-
-
+[Diagnosing Alzheimer's Disease](#diagnosing-alzheimers-disease)
+[Identifying Neurodegeneration with a Neural Network](#identifying-neurodegeneratoin-with-a-neural-network)
+[Predicting Alzheimer's in Cognitively Normal Subjects](#predicting-alzheimers-in-cognitively-normal-subjects)
 
 # Diagnosing Alzheimer's Disease
-======
 
 **Alzheimer's disease** is the most common form of dementia, effecting almost 12% of americans over the age of 60 and over 50 million people worldwide. Alzheimer's is best characterized by memory problems, movement difficulties, anosmia, and imparited reasoning.
 
@@ -12,8 +11,8 @@ Currently Alzheimer's disease is diagnosed through a physician by a combination 
 The trammels of diagnosis are a major barrier to the development of Alzheimer's therapies. Assessing the efficacy of a drug in clinical trials is hindered with a potentially heterogenous patient population. Developing more accurate means of identifying the disease in living patients will facilitate medical advances in the field. 
 
 
-Identifying Neurodegeneration with a Neural Network
-======
+# Identifying Neurodegeneration with a Neural Network
+
 In this project, I trained neural networks and random forest classifiers to distinguish the brains of cognitively normal patients from those diagnosed with Alzheimer's disease. 
 
 **predicting_Alzheimers_from_MRI.py**
@@ -22,8 +21,7 @@ I applied PCA to masked transverse-orientation MRI images from the Oasis 2 datas
 
 Data show the power of neural networks for image recognition and the immense potential of these machine learning methods for neurodegeneration diagnosis. 
 
-Predicting Alzheimer's in Cognitively Normal Subjects
-======
+# Predicting Alzheimer's in Cognitively Normal Subjects
 
 Studies show that Alzheimer's associated neurodegeneration can occur almost a decade befor cognitive symptoms. During this preclinical stage, patient's have normal cognitive function, but amyloid plaque deposits are already accumulating in brain tissue, leading to neuronal death. While early degeneration begins in the hippocampus, the area of the brain associated with memory formation, in late-stage Alzheimer's disease, degeneration is widespread.
 
