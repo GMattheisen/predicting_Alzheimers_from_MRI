@@ -23,11 +23,9 @@ Brain showing Alzheimer's Degeneration<br>
 
 
 <p align="center">
-  <b>Some Links:</b><br>
-  <a href="#">Link 1</a> |
-  <a href="#">Link 2</a> |
-  <a href="#">Link 3</a>
-  <br><br>
+  <b>MRI of Cognitively Normal Patient</b><br>
+  <img src="https://github.com/GMattheisen/predicting_Alzheimers_from_MRI/blob/master/brain_COG_NORM.jpg">
+  <b>MRI of AD patient</b><br>
   <img src="https://github.com/GMattheisen/predicting_Alzheimers_from_MRI/blob/master/brain_ALZ.jpg">
 </p>
 
