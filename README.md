@@ -1,4 +1,8 @@
-Diagnosing Alzheimer's Disease
+[click on this link](#diagnosing-alzheimers-disease)
+
+
+
+#### Diagnosing Alzheimer's Disease
 ======
 
 **Alzheimer's disease** is the most common form of dementia, effecting almost 12% of americans over the age of 60 and over 50 million people worldwide. Alzheimer's is best characterized by memory problems, movement difficulties, anosmia, and imparited reasoning.
