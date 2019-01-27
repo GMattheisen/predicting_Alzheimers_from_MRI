@@ -5,7 +5,7 @@
 
 # Diagnosing Alzheimer's Disease
 
-**Alzheimer's disease** is the most common form of dementia, effecting almost 12% of americans over the age of 60 and over 50 million people worldwide. Alzheimer's is best characterized by memory problems, movement difficulties, anosmia, and imparited reasoning.
+**Alzheimer's disease** is the most common form of dementia, effecting almost 12% of americans over the age of 60 and over 50 million people worldwide. Alzheimer's is best characterized by memory problems, movement difficulties, anosmia, and impaired reasoning.
 
 Currently Alzheimer's disease is diagnosed through a physician by a combination of reported behavioral changes, patient history, and a mental status exam. As behavioral symptoms can overlap heavily with other neurodegenerative disorders, such as vascular dementia, this leaves ample room for misdiagnosis. Currently, Alzheimer's disease can only *definitively* diagnosed postmortum. This is because the hallmarks of Alzheimer's, proteinaceous changes that include amyloid plaques and neurofibrillarly tangles, can only be oberved in brain tissue itself following a postmortum autopsy. 
 
