@@ -1,63 +1,84 @@
 
 # coding: utf-8
 
-# # Oasis 3 Textual Data
+# # OASIS-3
+# ___
 
-# In[213]:
+# **Summary:** OASIS-3 is a retrospective compilation of data for >1000 participants that were collected across several ongoing projects through the WUSTL Knight ADRC over the course of 30 years. Participants include 609 cognitively normal adults and 489 individuals at various stages of cognitive decline ranging in age from 42-95yrs. All participants were assigned a new random identifier and all dates were removed and normalized to reflect days from entry into study. The dataset contains over 2000 MR sessions which include T1w, T2w, FLAIR, ASL, SWI, time of flight, resting-state BOLD, and DTI sequences. Many of the MR sessions are accompanied by volumetric segmentation files produced through Freesurfer processing. PET imaging from 3 different tracers, PIB, AV45, and FDG, totaling over 1500 raw imaging scans and the accompanying post-processed files from the Pet Unified Pipeline (PUP) are also available in OASIS-3.
+# <br><br>
+# For analysis, Alzheimer's disease (AD) patients were upsampled to balance the dataset.
+# <br><br>
+# ### Diagnosis Labeling<br>
+# ___
+# The field 'dx1' was used as the primary diagnostic for this study. All variables in this diagnostic field were assigned either 0 for healthy descriptor, 1 for AD as the primary diagnosis, or 2 for non-healthy, non-AD diagnosis, which may include Parkinson's or vascular dementia. The elements and their attributions can be found in a dictionary in the **Diagnosis Labeling** section of this study. These attributions were given for each individual clinical session per patient.
+# <br><br>
+# ```python
+# diagnosis_qual={0:'Cognitively Normal', 1:'Alzheimer\'s Diagnosis', 2.:'Non-Healthy, Non-Alzheimer\'s Disease'}
+# ```
+# <br>
+# Many patients had diagnoses that changed during the course of the study or included a mix of AD and other forms of dementia over different clinical visits. In order to provide for clean data, if the number of cumulative AD diagnoses (value of 1) was greater than the total number of non-healthy, non-AD diagnoses (value of 2), the patient was assigned a diagnosis of 1 for AD across all their clinical visits, and vice versa with the ascription of 2 for a non-healthy, non-AD. This value would override the attributions for every clinical visit for each patient so that each patient had just one diagnostic value. 
+# 
+# For those patients who were described as cognitively normal at the beginning of the study, but were then later diagnosed as having AD, with the number of total AD diagnoses greater than the total number of non-healthy, non-AD descriptors for that patient, these patients were assigned a 3 for 'converted.'
+# ```python
+# diagnosis_qual={0:'Cognitively Normal', 1:'Alzheimer\'s Diagnosis', 2:'Non-Healthy, Non-Alzheimer\'s Disease', 3:'Converted'}
+# ```
+# <br>
+# 
+# A more detailed description can be found in the code below.
+
+# # Environment Setup and Data Import
+
+# In[1]:
 
 
-import random
-import numpy as np
 import random
 random.seed(50)
-from sklearn.tree import export_graphviz
-import graphviz
-from sklearn.metrics import recall_score
-from sklearn.metrics import precision_score
-from collections import Counter
-from sklearn.model_selection import cross_val_score
-from sklearn.linear_model import LinearRegression, LogisticRegression
-import matplotlib.pyplot as plt
-from matplotlib.pyplot import imread
-from sklearn.model_selection import train_test_split
+import numpy as np
 import pandas as pd
 import matplotlib
-from sklearn.ensemble import RandomForestClassifier
-import scipy
-from sklearn.decomposition import PCA
-from sklearn.model_selection import GridSearchCV, train_test_split
+import matplotlib.pyplot as plt
+from matplotlib.pyplot import imread
+import plotly.plotly as py
+import plotly.graph_objs as go
 import os
 import seaborn as sns
+import scipy
+import graphviz
+from sklearn.tree import export_graphviz
+from sklearn.metrics import recall_score, precision_score
+from sklearn.model_selection import cross_val_score, train_test_split, GridSearchCV
+from sklearn.linear_model import LinearRegression, LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.decomposition import PCA
 from sklearn.tree import DecisionTreeClassifier
+from collections import Counter
 
 
-# In[214]:
+# In[3]:
 
 
 cd '/Users/glynismattheisen/Desktop/Final2'
 
 
-# In[215]:
+# In[4]:
 
 
-df_free = pd.read_csv('norm_vol_final.csv') # import freesurfer data
+df_FS = pd.read_csv('norm_vol_final.csv') # import freesurfer data
 df_age = pd.read_csv('age.csv') # import age data
 df_clin = pd.read_csv('gmattheisen_12_1_2018_15_52_40.csv') # import clinical data (includes diagnosis values)
 
 
-# ## Adding Age to Freesurfer Data
-
-# In[216]:
+# In[5]:
 
 
 def get_SESS_ID(file_name): # parse out session id from MR or FS ID
     return file_name[:9] + file_name[-5:]
 
 df_age['MR'] = df_age['MR ID'].apply(get_SESS_ID) # convert long form MR ID to session id
-df_free['MR'] = df_free['FS_FSDATA ID'].apply(get_SESS_ID)# convert long form FS ID to session id
+df_FS['MR'] = df_FS['FS_FSDATA ID'].apply(get_SESS_ID)# convert long form FS ID to session id
 
 
-# In[217]:
+# In[6]:
 
 
 def replace_null(column): # fill null values with MEAN +/- STD
@@ -72,37 +93,29 @@ def replace_null(column): # fill null values with MEAN +/- STD
     return column
 
 
-# In[218]:
+# In[7]:
 
 
-df_age['Age'] = replace_null(df_age['Age'])
-assert df_age["Age"].isnull().sum() ==0  #confirm null values count = 0
+del df_age['MR ID'], df_age['Subject'] # not needed
+del df_clin['Age'], df_clin['Date'] # mostly null
 
-del df_age['MR ID']
-del df_age['Subject']
-
-df_free.set_index('MR', inplace=True)
+df_FS.set_index('MR', inplace=True)
 df_age.set_index('MR', inplace=True)
 
-df_free = df_free.merge(df_age, left_index=True, right_index=True, how='inner')
-df_free.set_index(['FS_FSDATA ID'], inplace=True)
+df_age['Age'] = replace_null(df_age['Age']) # fill null age values with MEAN +/- STDd
+assert df_age["Age"].isnull().sum() ==0  # confirm null values count = 0
 
 
-# In[282]:
+# In[9]:
 
 
-del df_single['ageAtEntry']
-
-
-# In[281]:
-
-
-df_single
+df_FS = df_FS.merge(df_age, left_index=True, right_index=True, how='inner') # add age to Freesurfer data
+df_FS.set_index(['FS_FSDATA ID'], inplace=True)
 
 
 # # Diagnosis Labeling
 
-# In[219]:
+# In[10]:
 
 
 df_clin['dx1'].fillna('empty', inplace=True) # two null elements are patients with no other clinical diagnostic data
@@ -141,7 +154,7 @@ alz_diag = ['AD Dementia','AD dem Language dysf prior',
             'AD dem w/PDI after AD dem not contrib',
             'AD dem w/depresss, not contribut',
             'DAT w/depresss not contribut',
-            'DAT' # dementia alzheimer's type
+            'DAT' # DAT = dementia alzheimer's type
            ] # list of AD descriptors
 
 
@@ -178,23 +191,18 @@ diags = [] # use the diagnostic dictionary to create list of all labels for elem
 for i in df_clin['dx1']:
     diags.append(diagnosis_dict[i])
 
-df_clin['label'] = pd.DataFrame(diags) # add to df_clin as new column 
+df_clin['label'] = pd.DataFrame(diags) # add labels to df_clin as new column 
 
 
-# ## Create Dataframe of Subjects Whose Diagnosis Changes During Course of Data Collection
+# ## Create Dataframe of Subjects Whose Diagnosis Changes (Healthy>AD) During Study
 
-# In[220]:
-
-
-del df_clin['Age'] # mostly null
-del df_clin['Date'] # mostly null
-
-
-# In[221]:
+# In[13]:
 
 
 Subjects = df_clin['Subject'].unique() # Determine unique subjects
 
+"""this code takes all the diagnostics for each visit for each patient and summarizes them such 
+that each patient gets just one diagnostic value across all visits"""
 for subj in range(0,1098):     # find the entries for each subject
     values = np.where(df_clin['Subject'] == Subjects[subj])[0]     # put entries in list
     diag_nums = []   # list of labels for each subject
@@ -202,27 +210,27 @@ for subj in range(0,1098):     # find the entries for each subject
         diag_nums.append(df_clin['label'].iloc[i])
     if diag_nums.count(2) != 0 or diag_nums.count(1) != 0: 
         if diag_nums.count(0) == 0:
-            if diag_nums.count(1) >= diag_nums.count(2): # if number of alz diagnoses greater than number of misc, diagnose alz
+            if diag_nums.count(1) >= diag_nums.count(2): # if number of alz diagnoses greater than number of misc >> diagnose alz
                 for i in values:
                     df_clin['label'][i] = 1 # our new 'converted group'
-            elif diag_nums.count(2) > diag_nums.count(1): # if number of misc diagnoses greater than number of alz, diagnose misc
+            elif diag_nums.count(2) > diag_nums.count(1): # if number of misc diagnoses greater than number of alz >> diagnose misc
                 for i in values:
                     df_clin['label'][i] = 2
         elif diag_nums.count(0) != 0:
-            if diag_nums.count(2) > diag_nums.count(1): # if number of alz diagnoses greater than number of misc, diagnose alz
+            if diag_nums.count(2) > diag_nums.count(1): # if number of alz diagnoses greater than number of misc >> diagnose alz
                 for i in values:
                     df_clin['label'][i] = 2 # our new 'converted group'
-            elif diag_nums.count(1) >= diag_nums.count(2): # if number of misc diagnoses greater than number of alz, diagnose misc
+            elif diag_nums.count(1) >= diag_nums.count(2): # if number of misc diagnoses greater than number of alz >> diagnose misc
                 for i in values:
                     df_clin['label'][i] = 3
     
 df_clin.to_csv('clinical_w_Conv_diag.csv') # write to file
 
 
-# ## Make a Dictionary of Subjects and Diagnoses
+# In[15]:
 
-# In[222]:
 
+"""create a new dictionary of these summary diagnostic values for each patient"""
 
 diag = [] # make file of just subjects with diagnoses
 for subj in range(0,1098):
@@ -234,111 +242,100 @@ for num in range(0,1098):
     Subject_dict[Subjects[num]] = diag[num] # dictionary with subjects as keys and diagnoses as values
 
 
-# ## Alter Freesurfer File with Diagnostic Data
-
-# In[223]:
-
-
-diagnosis = [] 
-for i in df_free['Subject']:
-    diagnosis.append(Subject_dict[i])
-    
-diagnosis = pd.DataFrame(diagnosis)
-df_free['Diagnosis'] = diagnosis.values # add column of diagnoses to freesurfer data
-
-df_free_conv = df_free[df_free.Diagnosis == 3] # include only converted patients
-
-
-# In[225]:
-
-
-# create df without converted patients
-df_wo_conv = df_free[df_free.Diagnosis != 2] # take out miscellaneous diagnoses
-df_wo_conv = df_wo_conv[df_wo_conv.Diagnosis != 2] # take out conv diagnoses
-
-
-# ## Change Converted Labels to Alzheimer's for Training
-
-# In[12]:
-
-
-for x,i in enumerate(df_free['Diagnosis']):
-    if i == 3:
-        df_free['Diagnosis'][x] = 1
-
-df_free = df_free[df_free.Diagnosis != 2] # take out miscellaneous diagnoses
-
-
-# In[13]:
-
-
-len(df_free[df_free['Diagnosis'] == 1]), len(df_free[df_free['Diagnosis'] == 0])
-
-
-# In[14]:
-
-
-1431-452
-
-
-# In[15]:
-
-
-979 % 452
-
-
-# In[16]:
-
-
-alz_head = df_free.sort_values(by='Diagnosis', ascending = False).head(452) # all subjects diagnosed as alz
-
-
-# In[17]:
-
-
-df_free_bal = df_free.append(alz_head)
-
+# ## Combine Freesurfer Data with Diagnostic Data
 
 # In[18]:
 
 
-df_free_bal = df_free_bal.append(alz_head)
+diagnosis = [] 
+for i in df_FS['Subject']:
+    diagnosis.append(Subject_dict[i])
+    
+diagnosis = pd.DataFrame(diagnosis)
+df_FS['Diagnosis'] = diagnosis.values # add column of diagnoses to freesurfer data
+
+df_FS_conv = df_FS[df_FS.Diagnosis == 3] # df of only converted patients
 
 
 # In[19]:
 
 
-alz_head_short = df_free.sort_values(by='Diagnosis', ascending = False).head(75) # all subjects diagnosed as alz
+# create df without converted patients
+df_wo_conv = df_FS[df_FS.Diagnosis != 2] # take out miscellaneous diagnoses
+df_wo_conv = df_wo_conv[df_wo_conv.Diagnosis != 3] # df without conv diagnoses
 
+
+# ## Change Converted Labels to Alzheimer's for Training
 
 # In[20]:
 
 
-df_free_bal = df_free_bal.append(alz_head_short)
+"""construct a df without non-healthy, non-AD (3) diagnoses and converted subjects included as AD"""
+for x,i in enumerate(df_FS['Diagnosis']):
+    if i == 3:
+        df_FS['Diagnosis'][x] = 1
+
+df_FS = df_FS[df_FS.Diagnosis != 2] # take out miscellaneous diagnoses
 
 
 # In[21]:
 
 
-assert len(df_free_bal[df_free_bal['Diagnosis'] == 1]) == len(df_free_bal[df_free_bal['Diagnosis'] == 0])
+len(df_FS[df_FS['Diagnosis'] == 1]), len(df_FS[df_FS['Diagnosis'] == 0]) # upsample AD patients appropriately
 
 
-# ## Correlations
-
-# In[168]:
+# In[22]:
 
 
-corr = df_free.corr() # what values correlate with diagnosis?
+AD_df = df_FS.sort_values(by='Diagnosis', ascending = False).head(452) # all subjects diagnosed as alz
+
+
+# In[23]:
+
+
+df_FS_bal = df_FS.append(AD_df)
+
+
+# In[24]:
+
+
+df_FS_bal = df_FS_bal.append(AD_df)
+
+
+# In[25]:
+
+
+AD_df_short = df_FS.sort_values(by='Diagnosis', ascending = False).head(75) # all subjects diagnosed as alz
+
+
+# In[26]:
+
+
+df_FS_bal = df_FS_bal.append(AD_df_short)
+
+
+# In[27]:
+
+
+assert len(df_FS_bal[df_FS_bal['Diagnosis'] == 1]) == len(df_FS_bal[df_FS_bal['Diagnosis'] == 0]) # check that data is balanced
+
+
+# ## Investigate Correlations
+
+# In[28]:
+
+
+corr = df_FS.corr() # what values correlate with diagnosis?
 corr
 
 
-# In[169]:
+# In[29]:
 
 
 columns = corr.columns.values
 
 
-# In[173]:
+# In[30]:
 
 
 z = [-0.412148,-0.402058,-0.409204,-0.392236,-0.392708,-0.324860,-0.318144,0.360485,1.000000]
@@ -351,11 +348,8 @@ for x, i in enumerate(list_n):
     list_n[x] = abs(i)
 
 
-# In[175]:
+# In[31]:
 
-
-import plotly.plotly as py
-import plotly.graph_objs as go
 
 z = [-0.412148,-0.402058,-0.409204,-0.392236,-0.392708,-0.324860,-0.318144,0.360485,1.000000]
 trace0 = go.Scatter(
@@ -398,7 +392,7 @@ fig = go.Figure(data=data, layout=layout)
 py.iplot(fig, filename='bubblechart-color')
 
 
-# In[49]:
+# In[32]:
 
 
 healthy = 'Cognitively Normal'
@@ -408,24 +402,24 @@ fig = plt.figure(figsize=(30, 35))
 grid = plt.GridSpec(4, 2, wspace=0.2, hspace=0.5)
 
 plt.subplot(grid[0, 0])
-ax = sns.kdeplot(df_free[df_free['Diagnosis']==1.0].lhCortexVol_norm_ICV, label = dementia, color='green', shade=True)
-ax = sns.kdeplot(df_free[df_free['Diagnosis']==0.0].lhCortexVol_norm_ICV, label = healthy, color ='blue', shade=True)
+ax = sns.kdeplot(df_FS[df_FS['Diagnosis']==1.0].lhCortexVol_norm_ICV, label = dementia, color='green', shade=True)
+ax = sns.kdeplot(df_FS[df_FS['Diagnosis']==0.0].lhCortexVol_norm_ICV, label = healthy, color ='blue', shade=True)
 ax.legend(fontsize=15)
 plt.xlabel('Left Hemisphere Cortex Volume', fontsize=20)
 plt.ylabel('Probability Density', fontsize=20)
 ax.set_title('Diagnosis and Left Hemisphere Cortex Volume', fontsize=24, pad = 20)
 
 plt.subplot(grid[0, 1])
-ax1 = sns.kdeplot(df_free[df_free['Diagnosis']==1.0].rhCortexVol_norm_ICV, label = dementia, color='green', shade=True)
-ax1 = sns.kdeplot(df_free[df_free['Diagnosis']==0.0].rhCortexVol_norm_ICV, label = healthy, color='blue', shade=True)
+ax1 = sns.kdeplot(df_FS[df_FS['Diagnosis']==1.0].rhCortexVol_norm_ICV, label = dementia, color='green', shade=True)
+ax1 = sns.kdeplot(df_FS[df_FS['Diagnosis']==0.0].rhCortexVol_norm_ICV, label = healthy, color='blue', shade=True)
 ax1.legend(fontsize=15)
 plt.xlabel('Right Hemisphere Cortex Volume', fontsize=20)
 plt.ylabel('Probability Density', fontsize=20)
 ax1.set_title('Diagnosis and Right Hemisphere Cortex Volume', fontsize=24, pad = 20)
 
 plt.subplot(grid[1, 0])
-ax2 = sns.kdeplot(df_free[df_free['Diagnosis']==1.0].TotalGray_norm_ICV, label = dementia, color='green', shade=True)
-ax2 = sns.kdeplot(df_free[df_free['Diagnosis']==0.0].TotalGray_norm_ICV, label = healthy, color='blue', shade=True)
+ax2 = sns.kdeplot(df_FS[df_FS['Diagnosis']==1.0].TotalGray_norm_ICV, label = dementia, color='green', shade=True)
+ax2 = sns.kdeplot(df_FS[df_FS['Diagnosis']==0.0].TotalGray_norm_ICV, label = healthy, color='blue', shade=True)
 ax2.legend(fontsize=15)
 plt.xlabel('Total Gray Matter', fontsize=20)
 plt.ylabel('Probability Density', fontsize=20)
@@ -433,24 +427,24 @@ ax2.set_title('Diagnosis and Total Gray Matter', fontsize=24, pad = 20)
 
 
 plt.subplot(grid[1, 1])
-ax = sns.kdeplot(df_free[df_free['Diagnosis']==1.0].SupraTentorialVol_norm_ICV, label = dementia, shade=True, color='green')
-ax = sns.kdeplot(df_free[df_free['Diagnosis']==0.0].SupraTentorialVol_norm_ICV, label = healthy, shade=True, color ='blue')
+ax = sns.kdeplot(df_FS[df_FS['Diagnosis']==1.0].SupraTentorialVol_norm_ICV, label = dementia, shade=True, color='green')
+ax = sns.kdeplot(df_FS[df_FS['Diagnosis']==0.0].SupraTentorialVol_norm_ICV, label = healthy, shade=True, color ='blue')
 plt.xlabel('SupraTentorial Volume', fontsize=20)
 plt.ylabel('Probability Density', fontsize=20)
 ax.legend(fontsize=15)
 ax.set_title('Diagnosis and SupraTentorial Volume', fontsize=24, pad = 20)
 
 plt.subplot(grid[2, 0])
-ax1 = sns.kdeplot(df_free[df_free['Diagnosis']==1.0].lhCorticalWhiteMatterVol_norm_ICV, label = dementia, shade=True,color='green')
-ax1 = sns.kdeplot(df_free[df_free['Diagnosis']==0.0].lhCorticalWhiteMatterVol_norm_ICV, label = healthy, shade=True,color='blue')
+ax1 = sns.kdeplot(df_FS[df_FS['Diagnosis']==1.0].lhCorticalWhiteMatterVol_norm_ICV, label = dementia, shade=True,color='green')
+ax1 = sns.kdeplot(df_FS[df_FS['Diagnosis']==0.0].lhCorticalWhiteMatterVol_norm_ICV, label = healthy, shade=True,color='blue')
 plt.xlabel('Left Hemisphere Cortical White Matter Volume', fontsize=20)
 plt.ylabel('Probability Density', fontsize=20)
 ax1.legend(fontsize=15)
 ax1.set_title('Diagnosis and Left Hemisphere Cortical White Matter Volume', fontsize=24, pad = 20)
 
 plt.subplot(grid[2, 1])
-ax1 = sns.kdeplot(df_free[df_free['Diagnosis']==1.0].rhCorticalWhiteMatterVol_norm_ICV, label = dementia, shade=True,color='green')
-ax1 = sns.kdeplot(df_free[df_free['Diagnosis']==0.0].rhCorticalWhiteMatterVol_norm_ICV, label = healthy, shade=True,color='blue')
+ax1 = sns.kdeplot(df_FS[df_FS['Diagnosis']==1.0].rhCorticalWhiteMatterVol_norm_ICV, label = dementia, shade=True,color='green')
+ax1 = sns.kdeplot(df_FS[df_FS['Diagnosis']==0.0].rhCorticalWhiteMatterVol_norm_ICV, label = healthy, shade=True,color='blue')
 plt.xlabel('Right Hemisphere Cortical White Matter Volume', fontsize=20)
 plt.ylabel('Probability Density', fontsize=20)
 ax1.legend(fontsize=15)
@@ -458,15 +452,15 @@ ax1.set_title('Diagnosis and Right Hemisphere Cortical White Matter Volume', fon
 
 
 plt.subplot(grid[3, 0])
-ax1 = sns.kdeplot(df_free[df_free['Diagnosis']==1.0].Age, label = dementia, shade=True,color='green')
-ax1 = sns.kdeplot(df_free[df_free['Diagnosis']==0.0].Age, label = healthy, shade=True,color='blue')
+ax1 = sns.kdeplot(df_FS[df_FS['Diagnosis']==1.0].Age, label = dementia, shade=True,color='green')
+ax1 = sns.kdeplot(df_FS[df_FS['Diagnosis']==0.0].Age, label = healthy, shade=True,color='blue')
 plt.xlabel('Age', fontsize=20)
 plt.ylabel('Probability Density', fontsize=20)
 ax1.legend(fontsize=15)
 ax1.set_title('Diagnosis and Age', fontsize=24, pad = 20)
 
 
-# In[68]:
+# In[34]:
 
 
 healthy = 'Cognitively Normal'
@@ -481,11 +475,11 @@ grid = plt.GridSpec(3, 2, wspace=0.2, hspace=0.5)
 
 plt.subplot(grid[0, 0])
 
-ax = sns.kdeplot(df_free[df_free['Diagnosis']==0.0].lhCortexVol_norm_ICV, label = left_h, color =sns.xkcd_rgb["pastel green"], shade=True, legend='lh')
-ax = sns.kdeplot(df_free[df_free['Diagnosis']==0.0].rhCortexVol_norm_ICV, label = right_h, color=sns.xkcd_rgb["dark green"], shade=True, legend='rh')
+ax = sns.kdeplot(df_FS[df_FS['Diagnosis']==0.0].lhCortexVol_norm_ICV, label = left_h, color =sns.xkcd_rgb["pastel green"], shade=True, legend='lh')
+ax = sns.kdeplot(df_FS[df_FS['Diagnosis']==0.0].rhCortexVol_norm_ICV, label = right_h, color=sns.xkcd_rgb["dark green"], shade=True, legend='rh')
 
-ax = sns.kdeplot(df_free[df_free['Diagnosis']==1.0].lhCortexVol_norm_ICV, label = left_a, color=sns.xkcd_rgb["pastel blue"], shade=True, legend='lh')
-ax = sns.kdeplot(df_free[df_free['Diagnosis']==1.0].rhCortexVol_norm_ICV, label = right_a, color=sns.xkcd_rgb["dark blue"], shade=True, legend='rh')
+ax = sns.kdeplot(df_FS[df_FS['Diagnosis']==1.0].lhCortexVol_norm_ICV, label = left_a, color=sns.xkcd_rgb["pastel blue"], shade=True, legend='lh')
+ax = sns.kdeplot(df_FS[df_FS['Diagnosis']==1.0].rhCortexVol_norm_ICV, label = right_a, color=sns.xkcd_rgb["dark blue"], shade=True, legend='rh')
 ax.legend(fontsize=15)
 plt.xlabel('Hemisphere Cortex Volume', fontsize=20)
 plt.ylabel('Probability Density', fontsize=20)
@@ -493,8 +487,8 @@ ax.set_title('Diagnosis and Cortex Volume', fontsize=24, pad = 20)
 
 
 plt.subplot(grid[0, 1])
-ax2 = sns.kdeplot(df_free[df_free['Diagnosis']==1.0].TotalGray_norm_ICV, label = dementia, color='blue', shade=True)
-ax2 = sns.kdeplot(df_free[df_free['Diagnosis']==0.0].TotalGray_norm_ICV, label = healthy, color='green', shade=True)
+ax2 = sns.kdeplot(df_FS[df_FS['Diagnosis']==1.0].TotalGray_norm_ICV, label = dementia, color='blue', shade=True)
+ax2 = sns.kdeplot(df_FS[df_FS['Diagnosis']==0.0].TotalGray_norm_ICV, label = healthy, color='green', shade=True)
 ax2.legend(fontsize=15)
 plt.xlabel('Total Gray Matter', fontsize=20)
 plt.ylabel('Probability Density', fontsize=20)
@@ -502,41 +496,41 @@ ax2.set_title('Diagnosis and Total Gray Matter', fontsize=24, pad = 20)
 
 
 plt.subplot(grid[1, 0])
-ax = sns.kdeplot(df_free[df_free['Diagnosis']==1.0].SupraTentorialVol_norm_ICV, label = dementia, shade=True, color='blue')
-ax = sns.kdeplot(df_free[df_free['Diagnosis']==0.0].SupraTentorialVol_norm_ICV, label = healthy, shade=True, color ='green')
+ax = sns.kdeplot(df_FS[df_FS['Diagnosis']==1.0].SupraTentorialVol_norm_ICV, label = dementia, shade=True, color='blue')
+ax = sns.kdeplot(df_FS[df_FS['Diagnosis']==0.0].SupraTentorialVol_norm_ICV, label = healthy, shade=True, color ='green')
 plt.xlabel('SupraTentorial Volume', fontsize=20)
 plt.ylabel('Probability Density', fontsize=20)
 ax.legend(fontsize=15)
 ax.set_title('Diagnosis and SupraTentorial Volume', fontsize=24, pad = 20)
 
 plt.subplot(grid[1, 1])
-ax1 = sns.kdeplot(df_free[df_free['Diagnosis']==0.0].rhCorticalWhiteMatterVol_norm_ICV, label = right_h, shade=True,color=sns.xkcd_rgb["dark green"])
-ax1 = sns.kdeplot(df_free[df_free['Diagnosis']==0.0].lhCorticalWhiteMatterVol_norm_ICV, label = left_h, shade=True,color=sns.xkcd_rgb["pastel green"])
-ax1 = sns.kdeplot(df_free[df_free['Diagnosis']==1.0].lhCorticalWhiteMatterVol_norm_ICV, label = left_a, shade=True,color=sns.xkcd_rgb["pastel blue"])
-ax1 = sns.kdeplot(df_free[df_free['Diagnosis']==1.0].rhCorticalWhiteMatterVol_norm_ICV, label = right_a, shade=True,color=sns.xkcd_rgb["dark blue"])
+ax1 = sns.kdeplot(df_FS[df_FS['Diagnosis']==0.0].rhCorticalWhiteMatterVol_norm_ICV, label = right_h, shade=True,color=sns.xkcd_rgb["dark green"])
+ax1 = sns.kdeplot(df_FS[df_FS['Diagnosis']==0.0].lhCorticalWhiteMatterVol_norm_ICV, label = left_h, shade=True,color=sns.xkcd_rgb["pastel green"])
+ax1 = sns.kdeplot(df_FS[df_FS['Diagnosis']==1.0].lhCorticalWhiteMatterVol_norm_ICV, label = left_a, shade=True,color=sns.xkcd_rgb["pastel blue"])
+ax1 = sns.kdeplot(df_FS[df_FS['Diagnosis']==1.0].rhCorticalWhiteMatterVol_norm_ICV, label = right_a, shade=True,color=sns.xkcd_rgb["dark blue"])
 plt.xlabel('Hemisphere Cortical White Matter Volume', fontsize=20)
 plt.ylabel('Probability Density', fontsize=20)
 ax1.legend(fontsize=15)
 ax1.set_title('Diagnosis and Cortical White Matter Volume', fontsize=24, pad = 20)
 
 plt.subplot(grid[2, 0])
-ax1 = sns.kdeplot(df_free[df_free['Diagnosis']==1.0].Age, label = dementia, shade=True,color='blue')
-ax1 = sns.kdeplot(df_free[df_free['Diagnosis']==0.0].Age, label = healthy, shade=True,color='green')
+ax1 = sns.kdeplot(df_FS[df_FS['Diagnosis']==1.0].Age, label = dementia, shade=True,color='blue')
+ax1 = sns.kdeplot(df_FS[df_FS['Diagnosis']==0.0].Age, label = healthy, shade=True,color='green')
 plt.xlabel('Age', fontsize=20)
 plt.ylabel('Probability Density', fontsize=20)
 ax1.legend(fontsize=15)
 ax1.set_title('Diagnosis and Age', fontsize=24, pad = 20)
 
 
-# # Model
+# # Predict AD with Random Forest Classifier
 
-# In[113]:
+# In[35]:
 
 
 def get_model(df):
     RanFor = RandomForestClassifier() # initialize random forest
 
-    x = df.drop('Subject', axis =1) # drop subject for test but maintain in df_free for later analysis
+    x = df.drop('Subject', axis =1) # drop subject for test but maintain in df_FS for later analysis
     X = x.drop("Diagnosis", axis=1)
     y = df["Diagnosis"]
 
@@ -572,21 +566,15 @@ def get_model(df):
     return final_model, accuracy, recall, precision
 
 
-# In[114]:
+# In[36]:
 
 
-all_inst_model, accuracy, recall, precision = get_model(df_free_bal)
-
-
-# In[115]:
-
-
-accuracy, precision, recall
+all_inst_model, accuracy, recall, precision = get_model(df_FS_bal)
 
 
 # ## Visualize the Decision Tree
 
-# In[97]:
+# In[38]:
 
 
 estimator = all_inst_model.estimators_[5]
@@ -604,30 +592,30 @@ graph  # in Jupyter
 
 # # Predict First Instances of Converted Subjects
 
-# In[28]:
+# In[39]:
 
 
-def get_instance(df_free_conv, instance):
-    conv_subj_ids = df_free_conv['Subject'].unique() # list of each converted subject id
+def get_instance(df_FS_conv, instance):
+    conv_subj_ids = df_FS_conv['Subject'].unique() # list of each converted subject id
 
     first_instance = [] # list instance for each subject in converted
     for i in conv_subj_ids:
-        first_instance.append(np.where(df_free_conv['Subject'] == i)[0][instance]) 
+        first_instance.append(np.where(df_FS_conv['Subject'] == i)[0][instance]) 
 
     conv_data = [] # list data for instance of converted subj 
     for i in first_instance:
-        conv_data.append(df_free_conv.iloc[i])
+        conv_data.append(df_FS_conv.iloc[i])
 
     return pd.DataFrame(conv_data), conv_subj_ids
 
 
-# In[29]:
+# In[41]:
 
 
-first_conv_FSdata, conv_subj_ids = get_instance(df_free_conv,instance = 0)
+first_conv_FSdata, conv_subj_ids = get_instance(df_FS_conv,instance = 0) # create df of first mentions for each converted subjects
 
 
-# In[30]:
+# In[53]:
 
 
 def prediction_acc(df, model):
@@ -637,58 +625,44 @@ def prediction_acc(df, model):
 
     prediction = model.predict(X) # predict diagnosis of first instances
 
-    counts = Counter(prediction)
+    counts = Counter(prediction) # counts number of AD diag, number of cog norm
+    print(counts)
+    return 'Accuracy of ' + str(round(counts[1] / (counts[1]+counts[0]) *100,2)) + '%' 
 
-    return 'Accuracy of ' + str(round(counts[1] / (counts[1]+counts[0]) *100,2)) + '%'
+
+# In[55]:
 
 
-# In[31]:
-
+"""predict AD in cognitively normal patients later diagnosed as AD
+using classifier trained on all data with converted subjects as AD"""
 
 prediction_acc(first_conv_FSdata, all_inst_model)
 
 
-# # Train on Just Last Instance
+# # Train Random Forest on Just Last Instance of AD in Converted Sample
 
-# In[184]:
+# In[67]:
 
 
-conv_subj_ids = df_free_conv['Subject'].unique() # list of each converted subject id
-
-first_instance = [] # list instance for each subject in converted
+instances = [] # list instances for each subject in converted
 for i in conv_subj_ids:
-    first_instance.append(np.where(df_free_conv['Subject'] == i)[0]) 
-    
-"""first_instance_2 = []
-for i in first_instance:
-    for x in i:
-        first_instance_2.append(x)
+    instances.append(np.where(df_FS_conv['Subject'] == i)[0]) 
 
-conv_data = [] # list data for instance of converted subj 
-for i in first_instance_2:
-    conv_data.append(df_free_conv.iloc[i])
-
-last_conv_FSdata = pd.DataFrame(conv_data)"""
-
-
-# In[204]:
-
-
-first_instance_2 = []
-for i in first_instance:
+instances_2 = []  # unpack values
+for i in instances:
     if len(i) == 1:
-        first_instance_2.append(i)
+        instances_2.append(i)
     else:
-        first_instance_2.append(i[1:])
+        instances_2.append(i[1:])
         
-first_instance_3 =[]
-for i in first_instance_2:
+last_instance =[] # unpack values to get list of last instance for each converted subj
+for i in instances_2:
     for x in i:
-        first_instance_3.append(x)
+        last_instance.append(x)
         
 conv_data = [] # list data for instance of converted subj 
-for i in first_instance_3:
-    conv_data.append(df_free_conv.iloc[i])
+for i in last_instance:
+    conv_data.append(df_FS_conv.iloc[i])
 
 last_conv_FSdata = pd.DataFrame(conv_data)
 
@@ -699,62 +673,38 @@ for x,i in enumerate(df_w_last['Diagnosis']): # change converted 3 to alzheimer'
         df_w_last['Diagnosis'][x] = 1
 
 
-# In[37]:
+# In[69]:
 
 
-"""instances_conv = [] # list indices in full data set that include last instance converted subjects
-for i in conv_subj_ids:
-    instances_conv.append(np.where(df_free_bal['Subject'] == i)[0])
-    
-instances_conv_2 = []
-for i in instances_conv:
-    for x in i:
-        instances_conv_2.append(x)"""
+len(df_w_last[df_w_last['Diagnosis'] == 1]), len(df_w_last[df_w_last['Diagnosis'] == 0]) # upsample to balance
 
 
-# In[238]:
+# In[70]:
 
 
-len(df_w_last[df_w_last['Diagnosis'] == 1]), len(df_w_last[df_w_last['Diagnosis'] == 0])
+AD_head = df_w_last.sort_values(by='Diagnosis', ascending = False).head(381) # all subjects diagnosed as alz
+AD_head_rem = df_w_last.sort_values(by='Diagnosis', ascending = False).head(288) # all subjects diagnosed as alz
 
-
-# In[239]:
-
-
-1431-655
-
-
-# In[240]:
-
-
-776/655, 776 % 655
-
-
-# In[241]:
-
-
-alz_head = df_w_last.sort_values(by='Diagnosis', ascending = False).head(655) # all subjects diagnosed as alz
-alz_head_rem = df_w_last.sort_values(by='Diagnosis', ascending = False).head(131) # all subjects diagnosed as alz
-
-df_w_last = df_w_last.append(alz_head)
-df_w_last = df_w_last.append(alz_head_rem)
+df_w_last = df_w_last.append(AD_head)
+df_w_last = df_w_last.append(AD_head)
+df_w_last = df_w_last.append(AD_head_rem)
 
 len(df_w_last[df_w_last['Diagnosis'] == 1]), len(df_w_last[df_w_last['Diagnosis'] == 0])
 
 
-# In[242]:
+# In[71]:
 
 
-last_inst_model, accuracy, recall, precision = get_model(df_w_last)
+last_inst_model, accuracy, recall, precision = get_model(df_w_last) # train model on just last instances
 
 
-# In[243]:
+# In[72]:
 
 
 prediction_acc(first_conv_FSdata, last_inst_model)
 
 
-# In[258]:
+# In[73]:
 
 
 def color_red(val):
@@ -762,7 +712,7 @@ def color_red(val):
     return 'color: %s' % color
 
 
-# In[275]:
+# In[74]:
 
 
 result_df = pd.DataFrame({
