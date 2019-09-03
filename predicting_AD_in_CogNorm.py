@@ -35,15 +35,15 @@ import random
 random.seed(50)
 import numpy as np
 import pandas as pd
+import os
+import seaborn as sns
+import scipy
+import graphviz
 import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import imread
 import plotly.plotly as py
 import plotly.graph_objs as go
-import os
-import seaborn as sns
-import scipy
-import graphviz
 from sklearn.tree import export_graphviz
 from sklearn.metrics import recall_score, precision_score
 from sklearn.model_selection import cross_val_score, train_test_split, GridSearchCV
@@ -93,9 +93,6 @@ def replace_null(column): # fill null values with MEAN +/- STD
     return column
 
 
-# In[6]:
-
-
 del df_age['MR ID'], df_age['Subject'] # not needed
 del df_clin['Age'], df_clin['Date'] # mostly null
 
@@ -111,7 +108,6 @@ df_FS.set_index(['FS_FSDATA ID'], inplace=True)
 
 # # Diagnosis Labeling
 
-# In[7]:
 
 
 df_clin['dx1'].fillna('empty', inplace=True) # two null elements are patients with no other clinical diagnostic data
@@ -190,7 +186,6 @@ for i in df_clin['dx1']:
 df_clin['label'] = pd.DataFrame(diags) # add labels to df_clin as new column 
 
 
-# In[8]:
 
 
 Subjects = df_clin['Subject'].unique() # Determine unique subjects
@@ -221,7 +216,6 @@ for subj in range(0,1098):     # find the entries for each subject
 df_clin.to_csv('clinical_w_Conv_diag.csv') # write to file
 
 
-# In[9]:
 
 
 """create a new dictionary of these summary diagnostic values 
@@ -239,7 +233,6 @@ for num in range(0,1098):
 
 # ## Combine Freesurfer Data with Diagnostic Data
 
-# In[10]:
 
 
 diagnosis = [] 
@@ -255,7 +248,6 @@ df_FS_conv = df_FS[df_FS.Diagnosis == 3] # df of only converted patients
 df_FS_wo_conv = df_FS[df_FS.Diagnosis != 3] # df without conv diagnoses
 
 
-# In[11]:
 
 
 conv_subj_ids = df_FS_conv['Subject'].unique() # list of each converted subject id
@@ -269,9 +261,6 @@ for i in first_instance:
     conv_data.append(df_FS_conv.iloc[i])
     
 first_instance_df = pd.DataFrame(conv_data) # create df of data for first instance of those converted
-
-
-# In[12]:
 
 
 instances = [] # list instances for each subject in converted
@@ -303,8 +292,6 @@ for x,i in enumerate(last_instance_whole_df['Diagnosis']): # convert 3 values ba
         last_instance_whole_df['Diagnosis'][x] = 1
 
 
-# In[13]:
-
 
 # upsample AD to make balanced set
 AD_head = last_instance_whole_df.sort_values(by='Diagnosis', ascending = False).head(381) # all subjects diagnosed as alz
@@ -319,14 +306,11 @@ assert len(lI_whole_bal_df[lI_whole_bal_df['Diagnosis'] == 1]) == len(lI_whole_b
 
 # # Correlations
 
-# In[14]:
 
 
 corr = lI_whole_bal_df.corr() # what values correlate with diagnosis?
 corr
 
-
-# In[15]:
 
 
 columns = corr.columns.values
@@ -340,8 +324,6 @@ abs_list = lambda x :abs(x) # normalize x values
 for x, i in enumerate(list_n):
     list_n[x] = abs(i)
 
-
-# In[16]:
 
 
 z = [-0.412148,-0.402058,-0.409204,-0.392236,-0.392708,-0.324860,-0.318144,0.360485,1.000000]
@@ -384,8 +366,6 @@ data = [trace0]
 fig = go.Figure(data=data, layout=layout)
 py.iplot(fig, filename='bubblechart-color')
 
-
-# In[17]:
 
 
 healthy = 'Cognitively Normal'
@@ -453,8 +433,6 @@ ax1.legend(fontsize=15)
 ax1.set_title('Diagnosis and Age', fontsize=24, pad = 20)
 
 
-# In[18]:
-
 
 healthy = 'Cognitively Normal'
 dementia = 'Alzheimer\'s Diagnosis'
@@ -517,9 +495,6 @@ ax1.set_title('Diagnosis and Age', fontsize=24, pad = 20)
 
 # # Predict AD
 
-# In[19]:
-
-
 def get_model(df):
     RanFor = RandomForestClassifier() # initialize random forest
 
@@ -562,8 +537,6 @@ final_model, accuracy, precision, recall = get_model(lI_whole_bal_df)
 
 # # Visualize Decision Tree
 
-# In[20]:
-
 
 estimator = final_model.estimators_[5]
 
@@ -580,9 +553,6 @@ graph  # in Jupyter
 
 # # Predict AD in Cognitively Normal Patients
 
-# In[21]:
-
-
 x = first_instance_df.drop('Subject', axis =1) # first instances FS data to feed back into model
 X = x.drop('Diagnosis', axis =1)
 
@@ -592,21 +562,14 @@ counts = Counter(prediction) # counts number of AD diag, number of cog norm
 print(counts)
 
 
-# In[22]:
-
-
 print('Accuracy: ' + str(round(counts[1] / (counts[1]+counts[0]) *100,2)) + '%' )
 
-
-# In[23]:
 
 
 def color_red(val):
     color = 'red' if val == '97.93' else 'black'
     return 'color: %s' % color
 
-
-# In[24]:
 
 
 result_df = pd.DataFrame({
